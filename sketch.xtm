@@ -1,0 +1,42 @@
+(sys:load "libs/core/instruments.xtm")
+
+(bind-instrument epad epad_note_c epad_fx)
+
+(bind-func dsp:DSP
+  (lambda (in time chan dat)
+  (+ (epad in time chan dat)
+    (* 0.25 (synth in time chan dat)))))
+
+(dsp:set! dsp)
+
+(define root 36)
+
+(define funky
+  (lambda (beat dur)
+    (play-note (now) epad (+ root (random '(0 3 7 10))) 80 699)
+    (callback (*metro* (+ beat 2)) 'funky (+ beat dur) dur)))
+
+(funky (*metro* 'get-beat 4) 1/3)
+
+(bind-instrument synth synth_note_c synth_fx)
+
+(synth.attack 200.0)
+(synth.decay 200.0)
+(synth.release 1000.0)
+(synth.sustain 0.6)
+
+(define synthy
+  (lambda (beat dur)
+    (play-note (now) synth (+ root 0) 80 220000)
+    (play-note (now) synth (+ root 3) 80 220000)
+    (play-note (now) synth (+ root 7) 80 220000)
+    (callback (*metro* beat) 'synthy (+ beat dur) dur)))
+
+(synthy (*metro* 'get-beat 4) 4)
+
+(define rootchange
+  (lambda (beat dur)
+    (set! root (random '(36 41 43 45)))
+    (callback (*metro* (+ beat (* .5 dur))) 'rootchange (+ beat dur) dur)))
+
+(rootchange (*metro* 'get-beat 4) 16)
